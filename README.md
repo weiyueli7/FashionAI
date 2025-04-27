@@ -4,6 +4,8 @@
 
 FashionAI is a full-stack, AI-driven platform that consolidates fashion products from multiple brands, enabling users to efficiently discover matching items without extensive searching. With this application, users can submit queries such as "find me a classic dress for attending a summer wedding" and receive clothing recommendations that semantically match their criteria.
 
+See our blog post [here](https://medium.com/@michelleqtan/natural-language-based-ai-fashion-stylist-efe337e72270).
+
 ### Developers:
 
 <div style="display: flex; justify-content: space-around; align-items: center;">

@@ -1,0 +1,24 @@
+# PIPELINE DEFINITION
+# Name: data-captioning-pipeline
+components:
+  comp-data-captioning:
+    executorLabel: exec-data-captioning
+deploymentSpec:
+  executors:
+    exec-data-captioning:
+      container:
+        image: us-east5-docker.pkg.dev/fashion-ai-438801/fashionai-repo/fashionai_caption:latest
+pipelineInfo:
+  name: data-captioning-pipeline
+root:
+  dag:
+    tasks:
+      data-captioning:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-data-captioning
+        taskInfo:
+          name: data-captioning
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.10.1

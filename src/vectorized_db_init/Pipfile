@@ -1,0 +1,33 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[[source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+verify_ssl = true
+
+[packages]
+# Core dependencies
+transformers = "*"                     # Hugging Face Transformers
+numpy = "1.21.4"                       # Numerical computing library
+python-dotenv = "*"                    # Environment variable management
+torch = {version = "*", index = "pytorch"}  # PyTorch (CPU version)
+pillow = "*"                           # Image processing
+pandas = "*"                           # Data manipulation
+google-cloud-storage = "*"             # GCP Storage client
+google-cloud-secret-manager = "*"      # GCP Secret Manager client
+pinecone-client = "*"                  # Pinecone vector database client
+tqdm = "*"                             # Progress bars
+
+
+# Testing dependencies
+pytest = "*"                           # Testing framework
+pytest-cov = "*"                       # Test coverage reporting
+
+[dev-packages]
+# Add any development-only dependencies here, if needed.
+
+[requires]
+python_version = "3.9"

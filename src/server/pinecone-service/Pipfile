@@ -1,0 +1,25 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[[source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+verify_ssl = true
+
+[packages]
+fastapi = "*"
+uvicorn = "*"
+numpy = "1.24.4"     
+python-dotenv = "*"
+pinecone-client = "*"
+google-cloud-secret-manager = "*"
+pytest = "*"
+pytest-cov = "*"
+httpx = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

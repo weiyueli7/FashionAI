@@ -1,0 +1,302 @@
+name: CI/CD Pipeline
+
+on:
+  push:
+    branches:
+      - main
+  pull_request:
+    branches:
+      - main
+
+jobs:
+  lint:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: caption
+            path: src/caption
+            python_version: 3.11
+          - name: finetune
+            path: src/finetune
+            python_version: 3.8
+          - name: scraper
+            path: src/scraper
+            python_version: 3.11
+          - name: vector-service
+            path: src/server/vector-service
+            python_version: 3.9
+          - name: pinecone-service
+            path: src/server/pinecone-service
+            python_version: 3.9
+          - name: vectorized_db_init
+            path: src/vectorized_db_init
+            python_version: 3.9
+          - name: backend
+            path: src/server/backend
+            python_version: 3.9
+          - name: deployment_hf
+            path: src/deployment_hf
+            python_version: 3.9
+          - name: workflow
+            path: src/workflow
+            python_version: 3.11
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Load Global .env Variables
+        run: |
+          set -a
+          . src/server/.env
+          set +a
+
+      - name: Install Python and Flake8
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.service.python_version }}
+      - run: |
+          cd ${{ matrix.service.path }}
+          pip install flake8
+          flake8 . --count --select=E9,F63,F7,F82 --show-source --statistics
+
+  build:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: caption
+            path: src/caption
+            python_version: 3.11
+          - name: finetune
+            path: src/finetune
+            python_version: 3.8
+          - name: vectorized_db_init
+            path: src/vectorized_db_init
+            python_version: 3.9
+          - name: scraper
+            path: src/scraper
+            python_version: 3.11
+          - name: backend
+            path: src/server/backend
+            python_version: 3.9
+          - name: pinecone_service
+            path: src/server/pinecone-service
+            python_version: 3.9
+          - name: vector_service
+            path: src/server/vector-service
+            python_version: 3.9
+          - name: frontend
+            path: src/server/frontend
+            python_version: 3.9
+          - name: workflow
+            path: src/workflow
+            python_version: 3.11
+          - name: deployment_hf
+            path: src/deployment_hf
+            python_version: 3.9
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Build Docker Image for ${{ matrix.service.name }}
+        run: docker build -t ${{ matrix.service.name }}:latest ${{ matrix.service.path }}
+
+  test:
+    runs-on: ubuntu-latest
+    strategy:
+      matrix:
+        service:
+          - name: caption
+            path: src/caption
+            python_version: 3.11
+          - name: scraper
+            path: src/scraper
+            python_version: 3.11
+          - name: vectorized_db_init
+            path: src/vectorized_db_init
+            python_version: 3.9
+          - name: backend
+            path: src/server/backend
+            python_version: 3.9
+          - name: pinecone_service
+            path: src/server/pinecone-service
+            python_version: 3.9
+          - name: vector_service
+            path: src/server/vector-service
+            python_version: 3.9
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Install Python and pipenv
+        uses: actions/setup-python@v4
+        with:
+          python-version: ${{ matrix.service.python_version }}
+      - run: pip install pipenv
+
+      - name: Load Global .env Variables
+        run: |
+          set -a
+          . src/server/.env
+          set +a
+
+      - name: Install Dependencies for ${{ matrix.service.name }}
+        run: |
+          cd ${{ matrix.service.path }}
+          pipenv install --dev
+
+      - name: Run Unit Tests for ${{ matrix.service.name }}
+        run: |
+          cd ${{ matrix.service.path }}
+          pipenv run pytest --cov=. --cov-report=xml --cov-fail-under=50
+
+      - name: Upload Coverage Report for ${{ matrix.service.name }}
+        uses: actions/upload-artifact@v3
+        with:
+          name: coverage-report-${{ matrix.service.name }}
+          path: ${{ matrix.service.path }}/coverage.xml
+
+  integration-tests:
+    needs:
+      - lint
+      - test
+      - build
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Load Global .env Variables
+        run: |
+          set -a
+          . src/server/.env
+          set +a
+          for var in $(cat src/server/.env | cut -d= -f1); do
+            echo "$var=${!var}" >> $GITHUB_ENV
+          done
+
+      - name: Install Docker Compose
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y docker-compose
+
+      - name: Validate Docker Compose
+        run: docker-compose -f src/server/docker-compose.yml config
+
+      - name: Start Services with Docker Compose
+        run: docker-compose -f src/server/docker-compose.yml up -d --remove-orphans
+
+      - name: Wait for Services to Be Ready
+        run: sleep 150
+
+      - name: Install Dependencies
+        run: pip install pytest httpx pytest-asyncio numpy
+
+      - name: Run Integration Tests
+        run: pytest src/server/integration_tests/test_integration.py -v
+     
+      - name: Print Docker Logs
+        run: docker-compose logs
+  
+  deploy:
+    if: contains(github.event.head_commit.message, '/deploy-app')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Authenticate with Google Cloud using Service Account
+        uses: google-github-actions/auth@v1  # Updated to v1
+        with:
+          credentials_json: "${{ secrets.GCP_SA_KEY }}"  # GitHub secret with your service account key
+
+      - name: Set up Google Cloud SDK
+        uses: google-github-actions/setup-gcloud@v1  # Updated to v1
+        with:
+          project_id: ${{ secrets.GCP_PROJECT_ID }}  # Your Google Cloud Project ID
+
+      - name: Authenticate Docker to GCR
+        run: gcloud auth configure-docker
+
+      - name: Set up Ansible and Install Dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y python3-pip python3-venv
+          python3 -m venv ansible-env
+          source ansible-env/bin/activate
+          pip install --upgrade pip
+          pip install ansible requests kubernetes pyyaml
+          ansible-galaxy collection install kubernetes.core
+          ansible-galaxy collection install community.kubernetes
+
+      - name: Install gke-gcloud-auth-plugin
+        run: gcloud components install gke-gcloud-auth-plugin
+
+      - name: Set up Kubernetes kubeconfig
+        run: |
+          mkdir -p ~/.kube  # Ensure the .kube directory exists
+          echo "${{ secrets.KUBECONFIG_CONTENT }}" > ~/.kube/config
+          export KUBECONFIG=~/.kube/config  # Ensure it's available for the next steps
+      
+      - name: Check Kubernetes Authentication
+        run: kubectl get nodes
+      
+      - name: Verify Kubernetes Config
+        run: cat ~/.kube/config
+
+      - name: Run Ansible Playbook for Kubernetes Deployment
+        run: |
+          source ansible-env/bin/activate
+          ansible-playbook -i src/ansible/inventory.ini src/ansible/playbook.yml
+
+      - name: Clean Up GCP Service Account File
+        run: rm -f ./src/ansible/gcp_service_account.json
+  
+  run-ml-workflow:
+    if: contains(github.event.head_commit.message, '/run-ml-workflow')
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Set up Python
+        uses: actions/setup-python@v4
+        with:
+          python-version: '3.11'  # Match your Dockerfile's Python version
+
+      - name: Install Pipenv
+        run: |
+          python3 -m pip install --upgrade pip
+          pip install pipenv
+
+      - name: Set Up Pipenv Environment
+        run: |
+          pipenv install --deploy --ignore-pipfile
+
+        # 5. Create GCP Secret File using a here-document to preserve JSON structure
+      - name: Create GCP Secret File
+        run: |
+          mkdir -p ./secrets
+          cat <<EOF > ./secrets/secret.json
+          ${{ secrets.GCP_SA_KEY }}
+          EOF
+
+      # 6. Validate Secret JSON to ensure it's correctly formatted
+      - name: Validate Secret JSON
+        run: |
+          sudo apt-get update && sudo apt-get install -y jq
+          jq empty ./secrets/secret.json
+
+      # 7. Build the Docker Image
+      - name: Build Workflow Docker Image
+        run: |
+          docker build -t workflow ./src/workflow
+
+      # 8. Run the Docker Container with GCP Secret Mounted
+      - name: Run Workflow Docker Container with GCP Secret
+        run: |
+          docker run --rm --name workflow-container \
+            -v "$(realpath ./secrets/secret.json)":/secrets/secret.json:ro \
+            -e GOOGLE_APPLICATION_CREDENTIALS="/secrets/secret.json" \
+            workflow

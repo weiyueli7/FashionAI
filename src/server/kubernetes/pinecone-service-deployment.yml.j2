@@ -1,0 +1,56 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: pinecone-service
+  namespace: "{{ namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: pinecone-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: pinecone-service
+    spec:
+      containers:
+        - name: pinecone-service
+          image: "gcr.io/fashion-ai-438801/pinecone-service:{{ tag.stdout }}"  # Using variable for tag
+          ports:
+            - containerPort: 8002
+          resources:
+            requests:
+              memory: "2Gi"
+              cpu: "500m"
+            limits:
+              memory: "6Gi"
+              cpu: "1"
+          envFrom:
+            - secretRef:
+                name: service-env
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              value: /secrets/key.json
+          volumeMounts:
+            - name: "{{ gcp_secret_name }}"
+              mountPath: /secrets
+              readOnly: true
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8002
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      volumes:
+        - name: "{{ gcp_secret_name }}"
+          secret:
+            secretName: "{{ gcp_secret_name }}"
+      restartPolicy: Always

@@ -1,0 +1,26 @@
+[[source]]
+url = "https://pypi.org/simple"
+verify_ssl = true
+name = "pypi"
+
+[packages]
+apify-client = "*"
+python-dotenv = "*"
+pandas = "*"
+requests = "*"
+aiohttp = "*"
+asyncio = "*"
+google-cloud-storage = "*"
+google-generativeai = "*"
+google-cloud-secret-manager = "*"
+dvc = "*"                
+dvc-gdrive = "*"
+dvc-gs = "*"
+gitpython = "*" 
+pytest = "*"
+pytest-cov = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.11"

@@ -1,0 +1,8 @@
+[core]
+    remote = fashion_ai_models
+['remote "scraped_raw_data"']
+    url = gs://scraped_raw_data
+['remote "caption_images"']
+    url = gs://caption_images
+['remote "fashion_ai_models"']
+    url = gs://fashion_ai_models

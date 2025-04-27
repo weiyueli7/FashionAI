@@ -1,0 +1,6 @@
+outs:
+- md5: c0a21fc5d0d2b7559fb70bc3be3109fe.dir
+  size: 310302
+  nfiles: 3
+  hash: md5
+  path: sample_scrapped_images

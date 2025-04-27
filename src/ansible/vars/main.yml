@@ -1,0 +1,31 @@
+# ansible/vars/main.yml
+
+# GCP Configuration
+gcp_project: "fashion-ai-438801"
+gcp_zone: "us-central1-a"  # Example zone
+gcp_region: "us-central1"  # Example region
+gcp_auth_kind: "serviceaccount"
+cluster_name: "test-fashion-ai"
+machine_type: "n2d-standard-2"
+machine_disk_size: 30
+initial_node_count: 2
+cluster_state: "present"  # Set to "present" to create, "absent" to delete
+
+# Namespace
+namespace: "test-namespace"
+
+# Docker Tag
+docker_tag_file: ".docker-tag"
+
+# Ingress
+ingress_class: "nginx"
+
+# Secrets
+gcp_secret_name: "gcp-service-account-key"
+env_secret_name: "service-env"
+env_file_path: "{{ playbook_dir }}/../server/.env"
+
+
+# New Variables for Static IP
+ingress_static_ip_name: "nginx-ingress-static-ip"
+ingress_static_ip_region: "{{ gcp_region }}"  # Usually same as cluster region

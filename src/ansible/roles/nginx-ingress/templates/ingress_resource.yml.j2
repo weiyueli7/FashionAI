@@ -1,0 +1,35 @@
+# ansible/roles/nginx_ingress/templates/ingress_resource.yml.j2
+apiVersion: networking.k8s.io/v1
+kind: Ingress
+metadata:
+  name: ingress-resource
+  namespace: {{ namespace }}
+  annotations:
+    nginx.ingress.kubernetes.io/ssl-redirect: "false"
+spec:
+  ingressClassName: "{{ ingress_class }}"  # Use ingressClassName instead of deprecated annotation
+  rules:
+    - host: "{{ reserved_ip.address }}.sslip.io"
+      http:
+        paths:
+          - path: /
+            pathType: Prefix
+            backend:
+              service:
+                name: frontend
+                port:
+                  number: 3000
+          - path: /health
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000
+          - path: /search
+            pathType: Prefix
+            backend:
+              service:
+                name: backend
+                port:
+                  number: 8000

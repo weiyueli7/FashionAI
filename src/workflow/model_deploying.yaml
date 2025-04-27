@@ -1,0 +1,26 @@
+# PIPELINE DEFINITION
+# Name: model-deploying-pipeline
+components:
+  comp-model-deploying:
+    executorLabel: exec-model-deploying
+deploymentSpec:
+  executors:
+    exec-model-deploying:
+      container:
+        args:
+        - cli.py
+        image: us-east5-docker.pkg.dev/fashion-ai-438801/fashionai-repo/fashionclip-deployment-hf:latest
+pipelineInfo:
+  name: model-deploying-pipeline
+root:
+  dag:
+    tasks:
+      model-deploying:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-model-deploying
+        taskInfo:
+          name: model-deploying
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.10.1

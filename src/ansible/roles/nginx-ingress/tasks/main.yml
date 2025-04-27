@@ -1,0 +1,52 @@
+# ansible/roles/nginx_ingress/tasks/main.yml
+
+---
+- name: "Add nginx-ingress helm repo"
+  community.kubernetes.helm_repository:
+    name: nginx-stable
+    repo_url: https://helm.nginx.com/stable
+  when: cluster_state == "present"
+
+- name: "Install nginx-ingress with static IP"
+  community.kubernetes.helm:
+    name: nginx-ingress
+    namespace: "{{ namespace }}"
+    chart_ref: nginx-stable/nginx-ingress
+    state: present
+    values:
+      controller:
+        service:
+          loadBalancerIP: "{{ reserved_ip.address }}"
+  when: cluster_state == "present"
+
+- name: "Wait for Ingress Nginx to get ready"
+  shell: |
+    #!/bin/bash
+    kubectl get service nginx-ingress-controller --namespace="{{ namespace }}" -ojson | jq -r '.status.loadBalancer.ingress[].ip'
+  register: nginx_ingress
+  retries: 20
+  delay: 10
+  until: nginx_ingress.stdout != ""
+  when: cluster_state == "present"
+
+- name: "Set Nginx Ingress IP"
+  set_fact:
+    nginx_ingress_ip: "{{ nginx_ingress.stdout }}"
+  when: cluster_state == "present"
+
+- name: "Debug Ingress Nginx IP Address"
+  debug:
+    msg: "Ingress Nginx IP Address: {{ nginx_ingress_ip }}"
+  when: cluster_state == "present"
+
+- name: "Create Ingress Resource from Template"
+  template:
+    src: "ingress_resource.yml.j2"
+    dest: "/tmp/ingress_resource.yml"
+  when: cluster_state == "present"
+
+- name: "Apply Ingress Resource"
+  k8s:
+    state: present
+    definition: "{{ lookup('file', '/tmp/ingress_resource.yml') }}"
+  when: cluster_state == "present"

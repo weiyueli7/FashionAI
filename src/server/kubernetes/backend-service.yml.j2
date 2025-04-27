@@ -1,0 +1,16 @@
+# kubernetes/services/backend_service.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: backend
+  namespace: "{{ namespace }}"
+  labels:
+    io.kompose.service: backend
+spec:
+  type: ClusterIP  # Changed from LoadBalancer to ClusterIP
+  ports:
+    - port: 8000          # Internal port
+      targetPort: 8000  # Port used by the backend container
+  selector:
+    io.kompose.service: backend

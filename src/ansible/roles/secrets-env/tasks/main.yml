@@ -1,0 +1,23 @@
+# ansible/roles/secrets_env/tasks/main.yml
+
+---
+- name: "Parse .env file into key-value pairs"
+  set_fact:
+    env_vars: "{{ lookup('file', env_file_path) | split('\n') | select('search', '^([^#].*)$') | selectattr('strip', 'ne', '') | map('regex_replace', '^\\s*(.*)\\s*$', '\\1') | map('split', '=') | list }}"
+
+- name: "Sanitize env variable keys"
+  set_fact:
+    sanitized_env_vars_dict: "{{ dict(env_vars | map('first') | map('regex_replace', '[^a-zA-Z0-9-_]', '') | zip(env_vars | map('last')) | list) }}"
+
+- name: "Create Env Secret"
+  k8s:
+    state: present
+    definition:
+      apiVersion: v1
+      kind: Secret
+      metadata:
+        name: "{{ env_secret_name }}"
+        namespace: "{{ namespace }}"
+      type: Opaque
+      stringData: "{{ sanitized_env_vars_dict }}"
+  when: cluster_state == "present"

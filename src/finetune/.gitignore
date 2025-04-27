@@ -1,0 +1,5 @@
+/models
+/finetune_data
+/wandb
+
+trainer.tar.gz

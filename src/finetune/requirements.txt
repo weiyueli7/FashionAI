@@ -1,0 +1,11 @@
+google-cloud-aiplatform
+fashion-clip
+torch
+torchvision
+transformers
+Pillow==9.2.0
+wandb==0.15.5
+annoy
+google-cloud-storage
+
+  # Install the appropriate version of FashionCLIP if it's available via PyPI or through source

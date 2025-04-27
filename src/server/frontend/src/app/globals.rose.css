@@ -1,0 +1,227 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,400;0,500;0,600;0,700;0,800;0,900;1,400;1,500;1,600;1,700;1,800;1,900&display=swap');
+@import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap');
+
+
+/* CSS Variables for theme colors */
+:root {
+    --primary-purple: #6366f1;
+    --purple-hover: #4f46e5;
+    --purple-light: #e0e7ff;
+    --text-primary: #111111;
+    --text-secondary: #374151;
+    --text-tertiary: #6b7280;
+    --background: #ffffff;
+    --surface: #f9fafb;
+    --border: #e5e7eb;
+    --border-light: #f3f4f6;
+}
+
+@layer base {
+    html {
+        scroll-behavior: smooth;
+        height: 100%;
+    }
+
+    body {
+        @apply antialiased;
+        background-color: var(--background);
+        color: var(--text-primary);
+        font-family: 'Inter', sans-serif;
+    }
+
+    h1, h2, h3, h4, h5, h6 {
+        font-family: 'Playfair Display', serif;
+        color: var(--text-primary);
+        font-weight: 300;
+        letter-spacing: -0.02em;
+    }
+
+    /* h1, h2, h3, h4, h5, h6 {
+        font-family: 'Inter', sans-serif;
+        color: var(--text-primary);
+    } */
+}
+
+@layer components {
+    /* Layout Components */
+    .layout-container {
+        @apply container mx-auto px-4;
+    }
+
+    .page-wrapper {
+        @apply flex flex-col min-h-screen;
+        background: var(--background);
+        padding-top: 25px;
+    }
+
+    /* Header Styles */
+    .header-wrapper {
+        @apply fixed w-full top-0 z-50 backdrop-blur-sm border-b;
+        background: rgba(255, 255, 255, 0.95);
+        border-color: var(--border);
+    }
+
+    .header-container {
+        background-color: transparent;
+    }
+
+    .header-content {
+        @apply container mx-auto px-4 h-16 flex items-center justify-between;
+    }
+
+    .header-logo {
+        @apply flex items-center gap-2 transition-colors font-medium;
+        color: var(--text-primary);
+    }
+
+    .header-logo:hover {
+        color: var(--primary-purple);
+    }
+
+    .nav-desktop {
+        @apply hidden md:flex items-center gap-8;
+    }
+
+    .nav-link {
+        @apply flex items-center gap-2 transition-all duration-300 text-sm font-medium;
+        color: var(--text-tertiary);
+    }
+
+    .nav-link:hover {
+        color: var(--text-primary);
+    }
+
+    .nav-link-active {
+        color: var(--primary-purple);
+    }
+
+    /* Hero Section */
+    .hero-section {
+        @apply pt-24 md:pt-32 pb-12 px-4;
+        background: var(--surface);
+    }
+
+    .hero-content {
+        @apply container mx-auto max-w-4xl text-center;
+    }
+
+    .hero-title {
+        @apply text-4xl md:text-6xl font-bold mb-6 tracking-tight;
+        color: var(--text-primary);
+    }
+
+    .hero-description {
+        @apply text-lg md:text-xl mb-8;
+        color: var(--text-secondary);
+    }
+
+    /* Buttons */
+    .button-primary {
+        @apply px-8 py-3 rounded-full font-medium relative overflow-hidden transition-all duration-300 text-sm;
+        background: var(--primary-purple);
+        color: white;
+    }
+
+    .button-primary:hover {
+        background: var(--purple-hover);
+        transform: translateY(-1px);
+    }
+
+    .button-secondary {
+        @apply px-8 py-3 rounded-full font-medium transition-all duration-300 text-sm;
+        background-color: var(--purple-light);
+        color: var(--primary-purple);
+    }
+
+    .button-secondary:hover {
+        background: var(--purple-light);
+        color: var(--purple-hover);
+    }
+
+    /* Cards */
+    .feature-card {
+        @apply p-6 rounded-2xl transition-all duration-300;
+        background-color: var(--background);
+        border: 1px solid var(--border);
+    }
+
+    .feature-card:hover {
+        border-color: var(--primary-purple);
+        transform: translateY(-2px);
+    }
+
+    .feature-card-title {
+        @apply text-xl font-semibold mb-4;
+        color: var(--text-primary);
+    }
+
+    .feature-card-description {
+        color: var(--text-secondary);
+    }
+
+    /* Input Styles */
+    .input-field {
+        @apply w-full px-4 py-3 rounded-full border text-sm transition-all duration-300;
+        background: var(--background);
+        border-color: var(--border);
+        color: var(--text-primary);
+    }
+
+    .input-field:focus {
+        @apply outline-none;
+        border-color: var(--primary-purple);
+    }
+
+    .input-field::placeholder {
+        color: var(--text-tertiary);
+    }
+
+    /* Footer */
+    .footer {
+        @apply w-full py-6 mt-auto border-t;
+        background-color: var(--surface);
+        border-color: var(--border);
+    }
+
+    .footer-text {
+        @apply text-center text-sm;
+        color: var(--text-tertiary);
+    }
+}
+
+@layer utilities {
+    .text-gradient {
+        background: linear-gradient(135deg, var(--primary-purple), var(--purple-hover));
+        -webkit-background-clip: text;
+        -webkit-text-fill-color: transparent;
+    }
+}
+
+/* Subtle Animations */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(10px);
+    }
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+.animate-fade-in {
+    animation: fadeIn 0.6s ease-out;
+}
+
+/* Image Hover Effects */
+.image-hover {
+    @apply transition-all duration-300;
+}
+
+.image-hover:hover {
+    transform: scale(1.02);
+}

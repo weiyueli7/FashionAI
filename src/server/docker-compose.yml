@@ -1,0 +1,84 @@
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    environment:
+      - PINECONE_SERVICE_HOST=pinecone-service
+      - VECTOR_SERVICE_HOST=vector-service
+    ports:
+      - "${APP_PORT_BACKEND}:${APP_PORT_BACKEND}"
+    networks:
+      - app-network
+    depends_on:
+      pinecone-service:
+        condition: service_healthy
+      vector-service:
+        condition: service_healthy
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl --silent --show-error http://localhost:${APP_PORT_BACKEND}/health || exit 1"]
+      interval: 15s
+      timeout: 5s
+      retries: 3
+    env_file:
+      - .env
+
+  vector-service:
+    build:
+      context: ./vector-service
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    ports:
+      - "${APP_PORT_VECTOR}:${APP_PORT_VECTOR}"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl --silent --show-error http://localhost:${APP_PORT_VECTOR}/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 3
+    env_file:
+      - .env
+
+  pinecone-service:
+    build:
+      context: ./pinecone-service
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    ports:
+      - "${APP_PORT_PINECONE}:${APP_PORT_PINECONE}"
+    networks:
+      - app-network
+    healthcheck:
+      test: ["CMD", "sh", "-c", "curl --silent --show-error http://localhost:${APP_PORT_PINECONE}/health || exit 1"]
+      interval: 15s
+      timeout: 10s
+      retries: 5
+    env_file:
+      - .env
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "${APP_PORT_FRONTEND}:${APP_PORT_FRONTEND}"
+    environment:
+      NODE_ENV: development
+    stdin_open: true
+    tty: true
+    networks:
+      - app-network
+    depends_on:
+      backend:
+        condition: service_healthy
+    env_file:
+      - .env
+
+networks:
+  app-network:
+    driver: bridge

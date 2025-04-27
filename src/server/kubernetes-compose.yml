@@ -1,0 +1,46 @@
+version: "3.8"  # Specify the Compose file version
+
+services:
+  backend:
+    build:
+      context: ./backend
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    environment:
+      - PINECONE_SERVICE_HOST=pinecone-service
+      - VECTOR_SERVICE_HOST=vector-service
+    ports:
+      - "8000:8000"  # Replace with actual APP_PORT_BACKEND value
+    depends_on:
+      - pinecone_service
+      - vector_service
+
+  vector-service:
+    build:
+      context: ./vector-service
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    ports:
+      - "8001:8001"  # Replace with actual APP_PORT_VECTOR value
+
+  pinecone-service:
+    build:
+      context: ./pinecone-service
+      dockerfile: Dockerfile
+    volumes:
+      - ../../../secrets:/secrets
+    ports:
+      - "8002:8002"  # Replace with actual APP_PORT_PINECONE value
+
+  frontend:
+    build:
+      context: ./frontend
+      dockerfile: Dockerfile.dev
+    ports:
+      - "3000:3000"  # Replace with actual APP_PORT_FRONTEND value
+    environment:
+      - NODE_ENV=production
+    depends_on:
+      - backend

@@ -1,0 +1,6 @@
+outs:
+- md5: ddcf00a0de1197f840a51841e299696d.dir
+  size: 170921
+  nfiles: 3
+  hash: md5
+  path: scraped_metadata

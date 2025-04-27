@@ -1,0 +1,45 @@
+apiVersion: apps/v1
+kind: Deployment
+metadata:
+  name: vector-service
+  namespace: "{{ namespace }}"
+spec:
+  replicas: 1
+  selector:
+    matchLabels:
+      io.kompose.service: vector-service
+  strategy:
+    type: Recreate
+  template:
+    metadata:
+      labels:
+        io.kompose.service: vector-service
+    spec:
+      containers:
+        - name: vector-service
+          image: "gcr.io/fashion-ai-438801/vector-service:{{ tag.stdout }}"  # Using variable for tag
+          ports:
+            - containerPort: 8001
+          resources: {}
+          envFrom:
+            - secretRef:
+                name: "{{ env_secret_name }}"
+          env:
+            - name: GOOGLE_APPLICATION_CREDENTIALS
+              valueFrom:
+                secretKeyRef:
+                  name: "{{ gcp_secret_name }}"
+                  key: key.json
+          readinessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 5
+            periodSeconds: 5
+          livenessProbe:
+            httpGet:
+              path: /health
+              port: 8001
+            initialDelaySeconds: 10
+            periodSeconds: 10
+      restartPolicy: Always

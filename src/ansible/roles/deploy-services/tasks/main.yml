@@ -1,0 +1,69 @@
+# ansible/roles/deploy_services/tasks/main.yml
+
+---
+- name: "Copy docker tag file"
+  copy:
+    src: "{{ docker_tag_file }}"
+    dest: "{{ docker_tag_file }}"
+    mode: 0644
+  when: cluster_state == "present"
+
+- name: "Get docker tag"
+  shell: "cat {{ docker_tag_file }}"
+  register: tag
+  when: cluster_state == "present"
+
+- name: "Print tag"
+  debug:
+    var: tag
+  when: cluster_state == "present"
+
+- name: "Deploy Backend Deployment"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/backend-deployment.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy vector-service Deployment"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/vector-service-deployment.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy pinecone-service Deployment"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/pinecone-service-deployment.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy Vector Service"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/vector-service.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy Pinecone Service"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/pinecone-service.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy Frontend Deployment"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/frontend-deployment.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy Backend Service"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/backend-service.yml.j2') }}"
+  when: cluster_state == "present"
+
+- name: "Deploy Frontend Service"
+  k8s:
+    state: present
+    definition: "{{ lookup('template', '../../../../server/kubernetes/frontend-service.yml.j2') }}"
+  when: cluster_state == "present"
+  
+

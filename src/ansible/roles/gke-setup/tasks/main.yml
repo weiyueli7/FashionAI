@@ -1,0 +1,81 @@
+# ansible/roles/gke_setup/tasks/main.yml
+
+---
+- name: "Create a GKE cluster"
+  google.cloud.gcp_container_cluster:
+    name: "{{ cluster_name }}"
+    initial_node_count: "{{ initial_node_count }}"
+    location: "{{ gcp_zone }}"
+    project: "{{ gcp_project }}"
+    release_channel:
+      channel: "UNSPECIFIED"
+    ip_allocation_policy:
+      use_ip_aliases: "yes"
+    auth_kind: application
+    node_config:
+      service_account: "fashion-ai-service@fashion-ai-438801.iam.gserviceaccount.com"  # Specify custom service account
+      oauth_scopes:
+        - "https://www.googleapis.com/auth/devstorage.read_only"
+        - "https://www.googleapis.com/auth/logging.write"
+        - "https://www.googleapis.com/auth/monitoring"
+        - "https://www.googleapis.com/auth/servicecontrol"
+        - "https://www.googleapis.com/auth/service.management.readonly"
+        - "https://www.googleapis.com/auth/trace.append"
+      machine_type: "{{ machine_type }}"
+      image_type: "COS_CONTAINERD"
+      disk_size_gb: "{{ machine_disk_size }}"
+    state: "{{ cluster_state }}"
+  register: cluster
+
+- name: "Create a Node Pool"
+  google.cloud.gcp_container_node_pool:
+    name: default-pool
+    initial_node_count: "{{ initial_node_count }}"
+    cluster: "{{ cluster }}"
+    location: "{{ gcp_zone }}"
+    project: "{{ gcp_project }}"
+    config:
+      machine_type: "{{ machine_type }}"
+      image_type: "cos_containerd"
+      disk_size_gb: "{{ machine_disk_size }}"
+      oauth_scopes:
+        - "https://www.googleapis.com/auth/devstorage.read_only"
+        - "https://www.googleapis.com/auth/logging.write"
+        - "https://www.googleapis.com/auth/monitoring"
+        - "https://www.googleapis.com/auth/servicecontrol"
+        - "https://www.googleapis.com/auth/service.management.readonly"
+        - "https://www.googleapis.com/auth/trace.append"
+      service_account: "fashion-ai-service@fashion-ai-438801.iam.gserviceaccount.com"
+    autoscaling:
+      enabled: "yes"
+      min_node_count: "1"
+      max_node_count: "{{ initial_node_count }}"
+    management:
+      auto_repair: "yes"
+      auto_upgrade: "yes"
+    auth_kind: application
+    state: "{{ cluster_state }}"
+
+
+- name: "Connect to cluster (update kubeconfig)"
+  shell: "gcloud container clusters get-credentials {{ cluster_name }} --zone {{ gcp_zone }} --project {{ gcp_project }}"
+  when: cluster_state == "present"
+
+- name: "Create Namespace"
+  k8s:
+    name: "{{ namespace }}"
+    api_version: v1
+    kind: Namespace
+    state: present
+  when: cluster_state == "present"
+
+# New Task: Reserve Static IP
+- name: "Reserve a static external IP for Ingress"
+  google.cloud.gcp_compute_address:
+    name: "{{ ingress_static_ip_name }}"
+    region: "{{ ingress_static_ip_region }}"
+    project: "{{ gcp_project }}"
+    state: present
+    auth_kind: application
+  register: reserved_ip
+  when: cluster_state == "present"

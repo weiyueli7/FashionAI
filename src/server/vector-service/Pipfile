@@ -1,0 +1,25 @@
+[[source]]
+name = "pypi"
+url = "https://pypi.org/simple"
+verify_ssl = true
+
+[[source]]
+name = "pytorch"
+url = "https://download.pytorch.org/whl/cpu"
+verify_ssl = true
+
+[packages]
+fastapi = "*"
+uvicorn = "*"   
+transformers = "*"
+numpy = "1.21.4"
+python-dotenv = "*"
+torch = {version = "*", index = "pytorch"}
+pillow = "*"
+pytest = "*"
+pytest-cov = "*"
+
+[dev-packages]
+
+[requires]
+python_version = "3.9"

@@ -1,0 +1,30 @@
+# PIPELINE DEFINITION
+# Name: training-pipeline
+components:
+  comp-training-component:
+    executorLabel: exec-training-component
+deploymentSpec:
+  executors:
+    exec-training-component:
+      container:
+        args:
+        - "export TRAINING_ENV=production &&\n                ./package-trainer.sh\
+          \ && ./cli.sh"
+        command:
+        - /bin/bash
+        - -c
+        image: us-east5-docker.pkg.dev/fashion-ai-438801/fashionai-repo/fashion_ai_training-cli:latest
+pipelineInfo:
+  name: training-pipeline
+root:
+  dag:
+    tasks:
+      training-component:
+        cachingOptions:
+          enableCache: true
+        componentRef:
+          name: comp-training-component
+        taskInfo:
+          name: training-component
+schemaVersion: 2.1.0
+sdkVersion: kfp-2.10.1

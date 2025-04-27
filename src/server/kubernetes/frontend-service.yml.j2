@@ -1,0 +1,16 @@
+# kubernetes/services/frontend_service.yml
+
+apiVersion: v1
+kind: Service
+metadata:
+  name: frontend
+  namespace: "{{ namespace }}"
+  labels:
+    io.kompose.service: frontend
+spec:
+  type: ClusterIP  # Changed from LoadBalancer to ClusterIP
+  ports:
+    - port: 3000          # Internal port
+      targetPort: 3000  # Port used by the frontend container
+  selector:
+    io.kompose.service: frontend

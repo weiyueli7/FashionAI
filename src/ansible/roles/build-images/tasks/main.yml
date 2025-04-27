@@ -1,0 +1,76 @@
+---
+- name: "Get docker tag"
+  shell: "cat {{ docker_tag_file }}"
+  register: tag
+  failed_when: tag.stdout == ''  # Fail if no tag is found
+
+- name: "Set default docker tag"
+  set_fact:
+    docker_tag: "{{ tag.stdout | default('latest') }}"  # Use the tag from the file, or default to 'latest'
+
+- name: "List Files in Current Directory"
+  command: ls -l
+
+# Step 1: Build Docker Image for backend
+- name: "Build Docker image for backend"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/backend
+    build:
+      path: "{{ playbook_dir }}/../server/backend"
+    source: build
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+
+- name: "Push Docker image for backend to GCR"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/backend
+    push: yes
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+    source: local
+
+# Step 2: Build Docker Image for frontend
+- name: "Build Docker image for frontend"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/frontend
+    build:
+      path: "{{ playbook_dir }}/../server/frontend"
+    source: build
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+
+- name: "Push Docker image for frontend to GCR"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/frontend
+    push: yes
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+    source: local
+
+# Step 3: Build Docker Image for pinecone service
+- name: "Build Docker image for pinecone service"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/pinecone-service
+    build:
+      path: "{{ playbook_dir }}/../server/pinecone-service"
+    source: build
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+
+- name: "Push Docker image for pinecone service to GCR"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/pinecone-service
+    push: yes
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+    source: local
+
+# Step 4: Build Docker Image for vector service
+- name: "Build Docker image for vector service"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/vector-service
+    build:
+      path: "{{ playbook_dir }}/../server/vector-service"
+    source: build
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+
+- name: "Push Docker image for vector service to GCR"
+  docker_image:
+    name: gcr.io/{{ gcp_project }}/vector-service
+    push: yes
+    tag: "{{ docker_tag }}"  # Use the tag read from the file or default
+    source: local
